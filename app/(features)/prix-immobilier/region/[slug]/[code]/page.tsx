@@ -22,7 +22,7 @@ export default async function Page({ params }: Readonly<RegionPageProps>) {
 
   return (
     <section className="bg-white p-6 rounded-lg shadow">
-      <h1 className="text-center text-lg font-semibold">
+      <h1 className="text-center text-primary text-lg font-semibold">
         Quel est le prix moyen au m² dans la région {region?.nom_region} ?
       </h1>
       <p className="text-center text-gray-600">

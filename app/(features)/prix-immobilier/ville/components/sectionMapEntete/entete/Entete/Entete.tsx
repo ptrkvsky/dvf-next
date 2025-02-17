@@ -22,30 +22,51 @@ export async function Entete({ commune }: Readonly<Props>) {
   );
 
   return (
-    <>
-      <h1 className="text-center text-lg font-semibold">
-        Prix de l'immobilier au{" "}
-        <abbr title="mètres carrés">
-          m<sup>2</sup>
-        </abbr>
-        <br />
-        {commune.nom_commune}
-      </h1>
+    <div className="flex flex-col items-center justify-center py-6 px-4 rounded-lg max-w-3xl mx-auto">
+      <div className="">
+        {/* Titre principal */}
+        <h1 className="text-xl font-light text-serif leading-none text-center">
+          Prix de l'immobilier au{" "}
+          <abbr
+            title="mètres carrés"
+            className="no-underline border-b border-dotted border-primary"
+          >
+            m<sup>2</sup>
+          </abbr>
+          <span className="text-4xl block font-bold mt-2 text-primary">
+            {commune.nom_commune}
+          </span>
+          <span className="text-sm text-sans">
+            Estimation{" "}
+            <strong>
+              {month} {year}
+            </strong>
+          </span>
+        </h1>
 
-      <p className="text-center text-gray-600">
-        Estimation au mois de {month} {year}
-      </p>
-      <p className="text-center text-gray-600">
-        Prix moyen au m2 {moyennePrixM2}
-      </p>
+        {/* Nom de la commune */}
 
-      {prixDepartement && (
-        <PriceBar
-          nomDepartement={prixDepartement.nom_departement}
-          codeDepartement={prixDepartement.code_departement}
-          codeCommune={commune.code_commune}
-        />
-      )}
-    </>
+        {/* Date de l'estimation */}
+
+        {/* Prix moyen */}
+        <p className="text-lg text-center font-medium mt-4">
+          Prix median{" "}
+          <span className="text-primary font-bold">
+            {moyennePrixM2.toFixed(0)} € / m²
+          </span>
+        </p>
+
+        {/* Composant PriceBar */}
+        {prixDepartement && (
+          <div className="w-full mt-5">
+            <PriceBar
+              nomDepartement={prixDepartement.nom_departement}
+              codeDepartement={prixDepartement.code_departement}
+              codeCommune={commune.code_commune}
+            />
+          </div>
+        )}
+      </div>
+    </div>
   );
 }

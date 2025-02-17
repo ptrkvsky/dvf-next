@@ -18,9 +18,5 @@ type DepartementPageProps = {
 export default async function Page({ params }: Readonly<DepartementPageProps>) {
   const codeCommune = (await params).code;
 
-  return (
-    <section className="bg-white p-6 rounded-lg shadow">
-      <SectionMapEntete codeCommune={codeCommune} />
-    </section>
-  );
+  return <SectionMapEntete codeCommune={codeCommune} />;
 }

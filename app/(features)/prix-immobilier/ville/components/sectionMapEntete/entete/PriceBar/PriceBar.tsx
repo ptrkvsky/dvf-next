@@ -33,7 +33,7 @@ export async function PriceBar({
 
   return (
     <div className="w-full max-w-md mx-auto text-center">
-      <h2 className="text-2xl font-bold">
+      <h2 className="text-2xl font-bold font-serif">
         {formatPrice(prixGlobal.prix_m2_median)} €
       </h2>
 
@@ -46,7 +46,7 @@ export async function PriceBar({
           <div className="flex-grow h-full bg-yellow-200"></div>
           <div className="flex-grow h-full bg-orange-400"></div>
           <div className="flex-grow h-full bg-orange-500"></div>
-          <div className="flex-grow h-full bg-red-400"></div>
+          <div className="flex-grow h-full bg-red-500"></div>
           <div className="flex-grow h-full bg-red-600"></div>
         </div>
 
@@ -57,8 +57,8 @@ export async function PriceBar({
       </div>
 
       <div className="flex justify-between text-sm mt-2 text-gray-600">
-        <span>Prix bas : {formatPrice(prixGlobal.prix_m2_bas)} €</span>
-        <span>Prix haut : {formatPrice(prixGlobal.prix_m2_haut)} €</span>
+        <span>Prix bas {formatPrice(prixGlobal.prix_m2_bas)} €</span>
+        <span>Prix haut {formatPrice(prixGlobal.prix_m2_haut)} €</span>
       </div>
 
       <PositionText

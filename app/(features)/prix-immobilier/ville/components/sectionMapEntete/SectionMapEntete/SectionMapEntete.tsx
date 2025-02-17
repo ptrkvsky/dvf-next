@@ -12,7 +12,7 @@ export async function SectionMapEntete({ codeCommune }: Readonly<Props>) {
   const transactions = await getTransactionsByCodeCommune(codeCommune);
 
   return (
-    <section className="mt-8">
+    <section className="grid max-h-[530px] grid-cols-[550px_1fr] gap-6">
       {commune && <Entete commune={commune} />}
       {commune && <MapPrix transactions={transactions} commune={commune} />}``
     </section>

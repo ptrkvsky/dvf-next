@@ -124,5 +124,5 @@ export function MapPrix({
     };
   }, [commune, transactions]);
 
-  return <div ref={mapRef} style={{ height: "90vh" }} />;
+  return <div ref={mapRef} style={{ height: "530px" }} />;
 }
