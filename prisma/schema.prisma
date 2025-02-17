@@ -1,0 +1,69 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Commune {
+  code_commune     String        @id @unique(map: "idx_commune_code_commune")
+  nom_commune      String
+  code_postal      String?
+  code_departement String
+  latitude         Float?
+  longitude        Float?
+  Transaction      Transaction[]
+}
+
+model Departement {
+  code_departement String        @id
+  nom_departement  String
+  code_region      String?
+  Region           Region?       @relation(fields: [code_region], references: [code_region])
+  Transaction      Transaction[]
+}
+
+model Region {
+  code_region String        @id
+  nom_region  String
+  Departement Departement[]
+}
+
+model Transaction {
+  id_mutation               String       @id
+  date_mutation             DateTime
+  nature_mutation           String
+  valeur_fonciere           Float
+  nombre_lots               Int?
+  surface_reelle_bati       Float?
+  nombre_pieces_principales Int?
+  longitude                 Float?
+  latitude                  Float?
+  code_commune              String
+  adresse_nom_voie          String?
+  code_postal               String?
+  adresse_code_voie         String?
+  adresse_numero            String?
+  code_nature_culture       String?
+  id_parcelle               String?
+  nature_culture            String?
+  type_local                TypeLocal?
+  code_departement          String?
+  Commune                   Commune      @relation(fields: [code_commune], references: [code_commune])
+  Departement               Departement? @relation(fields: [code_departement], references: [code_departement])
+
+  @@index([code_commune], map: "idx_transaction_code_commune")
+  @@index([code_departement], map: "idx_transaction_code_departement")
+  @@index([code_commune, id_mutation], map: "idx_transaction_commune_count")
+  @@index([date_mutation], map: "idx_transaction_date_mutation")
+  @@index([valeur_fonciere], map: "idx_transaction_valeur_fonciere")
+}
+
+enum TypeLocal {
+  Maison
+  Appartement
+  LocalCommercial
+  Terrain
+}

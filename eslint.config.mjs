@@ -31,6 +31,7 @@ export default antfu(
     rules: {
       ...nextPlugin.configs.recommended.rules,
       ...nextPlugin.configs["core-web-vitals"].rules,
+      curly: "off",
     },
   },
   {
