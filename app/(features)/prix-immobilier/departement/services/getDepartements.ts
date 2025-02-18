@@ -1,4 +1,4 @@
-import { prisma } from "@/app/libs/prisma";
+import { prisma } from '@/app/libs/prisma';
 
 export async function getDepartements(take = 10) {
   try {
@@ -9,13 +9,13 @@ export async function getDepartements(take = 10) {
         nom_departement: true,
       },
       orderBy: {
-        nom_departement: "asc",
+        nom_departement: 'asc',
       },
       take,
     });
     return regions;
   } catch (error) {
-    console.error("❌ Erreur lors de la récupération des départements:", error);
+    console.error('❌ Erreur lors de la récupération des départements:', error);
     return [];
   }
 }

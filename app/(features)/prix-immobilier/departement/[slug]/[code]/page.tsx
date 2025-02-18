@@ -1,11 +1,11 @@
-import { SectionVilles } from "@/app/(features)/prix-immobilier/departement/components/SectionVilles";
-import { getDepartements } from "@/app/(features)/prix-immobilier/departement/services/getDepartements";
-import { slugify } from "@/app/utils/slugify";
+import { SectionVilles } from '@/app/(features)/prix-immobilier/departement/components/SectionVilles';
+import { getDepartements } from '@/app/(features)/prix-immobilier/departement/services/getDepartements';
+import { slugify } from '@/app/utils/slugify';
 
 export async function generateStaticParams() {
   const departements = await getDepartements();
 
-  return departements.map((departement) => ({
+  return departements.map(departement => ({
     slug: slugify(departement.nom_departement),
     code: departement.code_departement,
   }));
@@ -21,7 +21,11 @@ export default async function Page({ params }: Readonly<DepartementPageProps>) {
   return (
     <section className="bg-white p-6 rounded-lg shadow">
       <h1 className="text-center text-lg font-semibold">
-        Quel est le prix moyen au m² dans le département {codeDepartement} ?
+        Quel est le prix moyen au m² dans le département
+        {' '}
+        {codeDepartement}
+        {' '}
+        ?
       </h1>
       <p className="text-center text-gray-600">
         Estimation au mois de Février 2025

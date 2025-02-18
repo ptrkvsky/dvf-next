@@ -1,5 +1,5 @@
-import type { PrixM2Commune } from "@/app/(features)/prix-immobilier/ville/types/PrixM2Commune";
-import { prisma } from "@/app/libs/prisma";
+import type { PrixM2Commune } from '@/app/(features)/prix-immobilier/ville/types/PrixM2Commune';
+import { prisma } from '@/app/libs/prisma';
 
 /**
  * Récupère les prix au mètre carré pour les maisons et appartements dans une commune spécifique.
@@ -17,7 +17,7 @@ import { prisma } from "@/app/libs/prisma";
  * ```
  */
 export async function getPrixM2Commune(
-  codeCommune: string
+  codeCommune: string,
 ): Promise<PrixM2Commune[]> {
   try {
     const result = await prisma.$queryRaw<PrixM2Commune[]>`
@@ -39,7 +39,7 @@ export async function getPrixM2Commune(
   } catch (error) {
     console.error(
       `❌ Erreur lors du calcul des prix pour la commune ${codeCommune} :`,
-      error
+      error,
     );
     return [];
   } finally {

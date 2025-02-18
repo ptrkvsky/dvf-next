@@ -1,14 +1,14 @@
-"use client";
+'use client';
 
-import type { Commune } from "@prisma/client";
-import L from "leaflet";
-import { useEffect, useRef } from "react";
-import "leaflet/dist/leaflet.css";
-import "./MapPrix.style.css";
-import "leaflet.heat";
+import type { Commune } from '@prisma/client';
+import L from 'leaflet';
+import { useEffect, useRef } from 'react';
+import 'leaflet/dist/leaflet.css';
+import './MapPrix.style.css';
+import 'leaflet.heat';
 
 // Declare the leaflet.heat module since TypeScript doesn't know about it
-declare module "leaflet" {
+declare module 'leaflet' {
   export type HeatLayerOptions = {
     radius?: number;
     blur?: number;
@@ -51,13 +51,13 @@ export function MapPrix({
     // Create map
     const map = L.map(mapRef.current).setView(
       [commune.latitude ?? 0, commune.longitude ?? 0],
-      14
+      14,
     );
     mapInstanceRef.current = map;
 
     // Filter and sort transactions by value
     const transactionsValides = transactions
-      .filter((t) => t.latitude && t.longitude && t.valeur_fonciere)
+      .filter(t => t.latitude && t.longitude && t.valeur_fonciere)
       .sort((a, b) => a.valeur_fonciere - b.valeur_fonciere);
 
     if (transactionsValides.length > 0) {
@@ -78,14 +78,14 @@ export function MapPrix({
         return 1.0;
       };
 
-      const heatData = transactionsValides.map((t) => [
+      const heatData = transactionsValides.map(t => [
         t.latitude!,
         t.longitude!,
         normaliserValeur(t.valeur_fonciere),
       ]);
 
       // Add tile layer
-      L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
         attribution:
           '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
         maxZoom: 19,
@@ -100,15 +100,15 @@ export function MapPrix({
         useLocalExtrema: false, // Use global values for color
         maxOpacity: 0.7, // Limit max intensity of red areas
         gradient: {
-          0.2: "blue", // Cheapest 25%
-          0.4: "yellow", // 25-50%
-          0.6: "orange", // 50-75%
-          1.0: "red", // Most expensive 25%
+          0.2: 'blue', // Cheapest 25%
+          0.4: 'yellow', // 25-50%
+          0.6: 'orange', // 50-75%
+          1.0: 'red', // Most expensive 25%
         },
       }).addTo(map);
 
       // Adjust view to see all points
-      const points = heatData.map((point) => [point[0], point[1]]);
+      const points = heatData.map(point => [point[0], point[1]]);
       if (points.length > 0) {
         const bounds = L.latLngBounds(points as [number, number][]);
         map.fitBounds(bounds);
@@ -124,5 +124,5 @@ export function MapPrix({
     };
   }, [commune, transactions]);
 
-  return <div ref={mapRef} style={{ height: "530px" }} />;
+  return <div ref={mapRef} style={{ height: '530px' }} />;
 }

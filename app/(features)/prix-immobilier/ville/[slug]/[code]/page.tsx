@@ -1,11 +1,11 @@
-import { SectionMapEntete } from "@/app/(features)/prix-immobilier/ville/components/sectionMapEntete/SectionMapEntete/SectionMapEntete";
-import { getCommunes } from "@/app/(features)/prix-immobilier/ville/services/getCommunes";
-import { slugify } from "@/app/utils/slugify";
+import { SectionMapEntete } from '@/app/(features)/prix-immobilier/ville/components/sectionMapEntete/SectionMapEntete/SectionMapEntete';
+import { getCommunes } from '@/app/(features)/prix-immobilier/ville/services/getCommunes';
+import { slugify } from '@/app/utils/slugify';
 
 export async function generateStaticParams() {
   const communes = await getCommunes();
 
-  return communes.map((commune) => ({
+  return communes.map(commune => ({
     slug: slugify(commune.code_commune),
     code: commune.code_commune,
   }));

@@ -1,43 +1,43 @@
-import fs from "node:fs";
-import { writeFile } from "node:fs/promises";
-import path from "node:path";
-import { PrismaClient } from "@prisma/client";
+import fs from 'node:fs';
+import { writeFile } from 'node:fs/promises';
+import path from 'node:path';
+import { PrismaClient } from '@prisma/client';
 
 const prisma = new PrismaClient();
 
 async function generateRegions() {
-  const PATH = "./public/data/regions.json";
-  console.log("🔄 Récupération des données...");
+  const PATH = './public/data/regions.json';
+  console.log('🔄 Récupération des données...');
 
   // Récupérer toutes les régions et leurs départements
   const regions = await prisma.region.findMany();
 
-  console.log("✅ Données récupérées, écriture en JSON...");
+  console.log('✅ Données récupérées, écriture en JSON...');
 
   await writeFile(PATH, JSON.stringify(regions, null, 2));
 
-  console.log("✅ Fichier JSON généré avec succès !");
+  console.log('✅ Fichier JSON généré avec succès !');
 }
 
 async function generateDepartements() {
-  const PATH = "./public/data/departements.json";
-  console.log("🔄 Récupération des données...");
+  const PATH = './public/data/departements.json';
+  console.log('🔄 Récupération des données...');
 
   // Récupérer toutes les régions et leurs départements
   const departements = await prisma.departement.findMany();
 
-  console.log("✅ Données récupérées, écriture en JSON...");
+  console.log('✅ Données récupérées, écriture en JSON...');
 
   await writeFile(PATH, JSON.stringify(departements, null, 2));
 
-  console.log("✅ Fichier JSON généré avec succès !");
+  console.log('✅ Fichier JSON généré avec succès !');
 }
 
 const BATCH_SIZE = 10000; // Nombre de transactions traitées par lot
-const OUTPUT_DIR = path.resolve("./public/data/transactions");
+const OUTPUT_DIR = path.resolve('./public/data/transactions');
 
 async function generateTransactionsJson() {
-  console.log("🔄 Génération des JSONs de transactions par commune...");
+  console.log('🔄 Génération des JSONs de transactions par commune...');
 
   try {
     // Vérifier ou créer le dossier de sortie
@@ -82,7 +82,7 @@ async function generateTransactionsJson() {
 
       // Écriture des fichiers JSON par commune
       for (const [codeCommune, transactions] of Object.entries(
-        groupedTransactions
+        groupedTransactions,
       )) {
         const filePath = path.join(OUTPUT_DIR, `${codeCommune}.json`);
 
@@ -90,7 +90,7 @@ async function generateTransactionsJson() {
         let existingTransactions: any[] = [];
         if (fs.existsSync(filePath)) {
           existingTransactions = JSON.parse(
-            fs.readFileSync(filePath, "utf-8") as any
+            fs.readFileSync(filePath, 'utf-8') as any,
           ) as any;
         }
 
@@ -98,7 +98,7 @@ async function generateTransactionsJson() {
         const updatedTransactions = [...existingTransactions, ...transactions];
         fs.writeFileSync(
           filePath,
-          JSON.stringify(updatedTransactions, null, 2)
+          JSON.stringify(updatedTransactions, null, 2),
         );
         console.log(`✅ Transactions ajoutées pour la commune ${codeCommune}`);
       }
@@ -107,9 +107,9 @@ async function generateTransactionsJson() {
       offset += BATCH_SIZE;
     }
 
-    console.log("🎉 Génération des JSONs terminée !");
+    console.log('🎉 Génération des JSONs terminée !');
   } catch (error) {
-    console.error("❌ Erreur lors de la génération des JSONs :", error);
+    console.error('❌ Erreur lors de la génération des JSONs :', error);
   } finally {
     await prisma.$disconnect();
   }
@@ -123,7 +123,7 @@ async function generateJSON() {
 
 generateJSON()
   .catch((err) => {
-    console.error("❌ Erreur lors de la génération du JSON", err);
+    console.error('❌ Erreur lors de la génération du JSON', err);
     prisma.$disconnect();
     process.exit(1);
   })

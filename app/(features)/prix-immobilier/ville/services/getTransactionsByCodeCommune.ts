@@ -1,4 +1,4 @@
-import { prisma } from "@/app/libs/prisma";
+import { prisma } from '@/app/libs/prisma';
 
 export async function getTransactionsByCodeCommune(codeCommune: string) {
   return await prisma.transaction.findMany({

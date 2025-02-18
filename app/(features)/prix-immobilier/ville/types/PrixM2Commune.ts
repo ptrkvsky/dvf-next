@@ -1,7 +1,7 @@
-import { z } from "zod";
+import { z } from 'zod';
 
 export const PrixM2CommuneSchema = z.object({
-  type_logement: z.enum(["Maison", "Appartement", "Global"]),
+  type_logement: z.enum(['Maison', 'Appartement', 'Global']),
   prix_m2_bas: z.number(),
   prix_m2_median: z.number(),
   prix_m2_haut: z.number(),

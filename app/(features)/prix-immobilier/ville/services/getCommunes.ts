@@ -1,4 +1,4 @@
-import { prisma } from "@/app/libs/prisma";
+import { prisma } from '@/app/libs/prisma';
 
 export async function getCommunes(take = 1) {
   try {
@@ -8,13 +8,13 @@ export async function getCommunes(take = 1) {
         code_commune: true,
       },
       orderBy: {
-        nom_commune: "asc",
+        nom_commune: 'asc',
       },
       take,
     });
     return regions;
   } catch (error) {
-    console.error("❌ Erreur lors de la récupération des communes:", error);
+    console.error('❌ Erreur lors de la récupération des communes:', error);
     return [];
   }
 }

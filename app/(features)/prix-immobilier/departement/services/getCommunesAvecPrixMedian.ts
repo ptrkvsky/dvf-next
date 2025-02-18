@@ -1,4 +1,4 @@
-import { prisma } from "@/app/libs/prisma";
+import { prisma } from '@/app/libs/prisma';
 
 /**
  * Interface représentant une commune avec son prix médian calculé en direct.
@@ -24,7 +24,7 @@ export type CommuneAvecPrix = {
  * ```
  */
 export async function getCommunesAvecPrixMedian(
-  codeDepartement: string
+  codeDepartement: string,
 ): Promise<CommuneAvecPrix[]> {
   try {
     const result = await prisma.$queryRaw<CommuneAvecPrix[]>`
@@ -54,7 +54,7 @@ export async function getCommunesAvecPrixMedian(
   } catch (error) {
     console.error(
       `❌ Erreur lors de la récupération des communes pour le département ${codeDepartement} :`,
-      error
+      error,
     );
     return [];
   } finally {

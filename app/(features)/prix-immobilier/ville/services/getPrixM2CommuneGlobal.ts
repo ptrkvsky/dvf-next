@@ -1,4 +1,4 @@
-import { prisma } from "@/app/libs/prisma";
+import { prisma } from '@/app/libs/prisma';
 
 /**
  * Récupère les prix au mètre carré médian, bas et haut pour une commune donnée,
@@ -56,7 +56,7 @@ export async function getPrixM2CommuneGlobal(codeCommune: string): Promise<{
   } catch (error) {
     console.error(
       `❌ Erreur lors du calcul des prix médians pour la commune ${codeCommune} :`,
-      error
+      error,
     );
     return null;
   } finally {

@@ -1,4 +1,4 @@
-import { prisma } from "@/app/libs/prisma";
+import { prisma } from '@/app/libs/prisma';
 
 export async function getCommuneByCode(codeCommune: string) {
   try {
@@ -9,7 +9,7 @@ export async function getCommuneByCode(codeCommune: string) {
     });
     return commune;
   } catch (error) {
-    console.error("❌ Erreur lors de la récupération de la commune:", error);
+    console.error('❌ Erreur lors de la récupération de la commune:', error);
     return null;
   }
 }

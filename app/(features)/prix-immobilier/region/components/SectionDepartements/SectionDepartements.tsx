@@ -1,5 +1,5 @@
-import { getDepartementsFromRegion } from "@/app/(features)/prix-immobilier/region/services/getDepartementsFromRegion";
-import { slugify } from "@/app/utils/slugify";
+import { getDepartementsFromRegion } from '@/app/(features)/prix-immobilier/region/services/getDepartementsFromRegion';
+import { slugify } from '@/app/utils/slugify';
 
 type Props = {
   codeRegion: string;
@@ -19,7 +19,7 @@ export async function SectionDepartements({ codeRegion }: Readonly<Props>) {
   }
 
   // Ajout du slug pour chaque département
-  const slugifiedDepartements = departements.map((dept) => ({
+  const slugifiedDepartements = departements.map(dept => ({
     ...dept,
     slug: slugify(dept.nom_departement),
   }));
@@ -28,13 +28,19 @@ export async function SectionDepartements({ codeRegion }: Readonly<Props>) {
     <section>
       <h2>Départements</h2>
       <ul>
-        {slugifiedDepartements.map((dept) => (
+        {slugifiedDepartements.map(dept => (
           <li key={dept.code_departement}>
             <a
               href={`/prix-immobilier/departement/${dept.slug}/${dept.code_departement}`}
             >
-              {dept.nom_departement} ({dept.code_departement}) (
-              {dept.prix_m2_median} €)
+              {dept.nom_departement}
+              {' '}
+              (
+              {dept.code_departement}
+              ) (
+              {dept.prix_m2_median}
+              {' '}
+              €)
             </a>
           </li>
         ))}

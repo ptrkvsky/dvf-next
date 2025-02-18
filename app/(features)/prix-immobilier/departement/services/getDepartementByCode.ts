@@ -1,4 +1,4 @@
-import { prisma } from "@/app/libs/prisma";
+import { prisma } from '@/app/libs/prisma';
 
 export async function getDepartementByCode(codeDepartement: string) {
   try {
@@ -9,7 +9,7 @@ export async function getDepartementByCode(codeDepartement: string) {
     });
     return departement;
   } catch (error) {
-    console.error("❌ Erreur lors de la récupération du département:", error);
+    console.error('❌ Erreur lors de la récupération du département:', error);
     return null;
   }
 }

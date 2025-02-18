@@ -1,4 +1,4 @@
-import { z } from "zod";
+import { z } from 'zod';
 
 export const PrixM2DepartementSchema = z.object({
   code_departement: z.string(),

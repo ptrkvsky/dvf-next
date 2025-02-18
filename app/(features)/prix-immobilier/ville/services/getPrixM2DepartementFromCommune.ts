@@ -1,9 +1,9 @@
-import type { PrixM2Departement } from "@/app/(features)/prix-immobilier/ville/types/PrixM2Departement";
-import { PrixM2DepartementSchema } from "@/app/(features)/prix-immobilier/ville/types/PrixM2Departement";
-import { prisma } from "@/app/libs/prisma";
+import type { PrixM2Departement } from '@/app/(features)/prix-immobilier/ville/types/PrixM2Departement';
+import { PrixM2DepartementSchema } from '@/app/(features)/prix-immobilier/ville/types/PrixM2Departement';
+import { prisma } from '@/app/libs/prisma';
 
 export async function getPrixM2DepartementFromCommune(
-  codeCommune: string
+  codeCommune: string,
 ): Promise<PrixM2Departement | null> {
   try {
     const result = await prisma.$queryRaw<PrixM2Departement[]>`
@@ -28,7 +28,7 @@ export async function getPrixM2DepartementFromCommune(
   } catch (error) {
     console.error(
       `❌ Erreur lors du calcul des prix pour le département de la commune ${codeCommune} :`,
-      error
+      error,
     );
     return null;
   } finally {
