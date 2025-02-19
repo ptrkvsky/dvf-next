@@ -43,3 +43,4 @@ next-env.d.ts
 
 # generated files
 /public/data
+/data/comunes-20220101.geojson
