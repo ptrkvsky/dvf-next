@@ -8,13 +8,18 @@ datasource db {
 }
 
 model Commune {
-  code_commune     String        @id @unique(map: "idx_commune_code_commune")
+  code_commune     String                   @id @unique(map: "idx_commune_code_commune")
   nom_commune      String
   code_postal      String?
   code_departement String
   latitude         Float?
   longitude        Float?
+  geometrie        Unsupported("geometry")?
+  surface_ha       Float?
+  wikipedia        String?
   Transaction      Transaction[]
+
+  @@index([geometrie], type: Gist)
 }
 
 model Departement {
@@ -59,6 +64,15 @@ model Transaction {
   @@index([code_commune, id_mutation], map: "idx_transaction_commune_count")
   @@index([date_mutation], map: "idx_transaction_date_mutation")
   @@index([valeur_fonciere], map: "idx_transaction_valeur_fonciere")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model spatial_ref_sys {
+  srid      Int     @id
+  auth_name String? @db.VarChar(256)
+  auth_srid Int?
+  srtext    String? @db.VarChar(2048)
+  proj4text String? @db.VarChar(2048)
 }
 
 enum TypeLocal {

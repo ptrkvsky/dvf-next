@@ -1,128 +1,162 @@
-'use client';
+"use client";
 
-import type { Commune } from '@prisma/client';
-import L from 'leaflet';
-import { useEffect, useRef } from 'react';
-import 'leaflet/dist/leaflet.css';
-import './MapPrix.style.css';
-import 'leaflet.heat';
+import L from "leaflet";
+import { useEffect, useRef, useState } from "react";
+import "leaflet/dist/leaflet.css";
+import "./MapPrix.style.css";
 
-// Declare the leaflet.heat module since TypeScript doesn't know about it
-declare module 'leaflet' {
-  export type HeatLayerOptions = {
-    radius?: number;
-    blur?: number;
-    maxZoom?: number;
-    scaleRadius?: boolean;
-    useLocalExtrema?: boolean;
-    maxOpacity?: number;
-    gradient?: Record<string, string>;
-  };
-
-  export function heatLayer(
-    latlngs: number[][],
-    options?: HeatLayerOptions
-  ): any;
-}
-
-type TransactionWithLocation = {
-  latitude: number | null;
-  longitude: number | null;
-  valeur_fonciere: number;
-  surface_reelle_bati: number | null;
-  nombre_pieces_principales: number | null;
+type CommuneGeoJSON = {
+  code_commune: string;
+  geojson: string;
 };
 
-type PropertyHeatmapProps = {
-  commune: Commune;
-  transactions: TransactionWithLocation[];
+type MapPrixProps = {
+  commune: CommuneGeoJSON;
+  geometrie: any;
 };
 
-export function MapPrix({
-  commune,
-  transactions,
-}: Readonly<PropertyHeatmapProps>) {
+export default function MapPrix({ commune, geometrie }: MapPrixProps) {
   const mapRef = useRef<HTMLDivElement>(null);
   const mapInstanceRef = useRef<L.Map | null>(null);
+  const [communesLimitrophes, setCommunesLimitrophes] = useState<
+    CommuneGeoJSON[]
+  >([]);
 
+  /** 🗺️ Initialisation de la carte Leaflet */
   useEffect(() => {
     if (!mapRef.current || mapInstanceRef.current) return;
 
-    // Create map
-    const map = L.map(mapRef.current).setView(
-      [commune.latitude ?? 0, commune.longitude ?? 0],
-      14,
-    );
+    console.log("🗺️ Initialisation de la carte Leaflet...");
+
+    // ✅ Création de la carte avec un zoom par défaut
+    const map = L.map(mapRef.current).setView(getCommuneCenter(commune), 12);
     mapInstanceRef.current = map;
 
-    // Filter and sort transactions by value
-    const transactionsValides = transactions
-      .filter(t => t.latitude && t.longitude && t.valeur_fonciere)
-      .sort((a, b) => a.valeur_fonciere - b.valeur_fonciere);
+    L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+      attribution: "&copy; OpenStreetMap contributors",
+      maxZoom: 19,
+    }).addTo(map);
 
-    if (transactionsValides.length > 0) {
-      // Define thresholds for quartiles
-      const q1Index = Math.floor(transactionsValides.length * 0.25);
-      const q2Index = Math.floor(transactionsValides.length * 0.5);
-      const q3Index = Math.floor(transactionsValides.length * 0.75);
+    // ✅ Ajout du polygone de la commune principale
+    addGeoJSONLayer(
+      map,
+      { geojson: geometrie[0].geojson, code_commune: commune.code_commune },
+      "red",
+      2,
+      0.4,
+      true
+    );
 
-      const q1 = transactionsValides[q1Index].valeur_fonciere;
-      const q2 = transactionsValides[q2Index].valeur_fonciere;
-      const q3 = transactionsValides[q3Index].valeur_fonciere;
+    // ✅ Récupération des communes limitrophes
+    fetchLimitrophes(commune.code_commune)
+      .then(setCommunesLimitrophes)
+      .catch((err) =>
+        console.error("❌ Erreur chargement communes limitrophes :", err)
+      );
 
-      // Normalize with a quartile scale
-      const normaliserValeur = (valeur: number) => {
-        if (valeur <= q1) return 0.2;
-        if (valeur <= q2) return 0.4;
-        if (valeur <= q3) return 0.6;
-        return 1.0;
-      };
-
-      const heatData = transactionsValides.map(t => [
-        t.latitude!,
-        t.longitude!,
-        normaliserValeur(t.valeur_fonciere),
-      ]);
-
-      // Add tile layer
-      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        attribution:
-          '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
-        maxZoom: 19,
-      }).addTo(map);
-
-      // Add heat layer
-      L.heatLayer(heatData as any, {
-        radius: 15, // Adjust based on transaction density
-        blur: 25, // Slightly increase blur to soften the heatmap
-        maxZoom: 14, // Ensure consistency between zoom levels
-        scaleRadius: false, // Prevent heatmap from changing based on zoom
-        useLocalExtrema: false, // Use global values for color
-        maxOpacity: 0.7, // Limit max intensity of red areas
-        gradient: {
-          0.2: 'blue', // Cheapest 25%
-          0.4: 'yellow', // 25-50%
-          0.6: 'orange', // 50-75%
-          1.0: 'red', // Most expensive 25%
-        },
-      }).addTo(map);
-
-      // Adjust view to see all points
-      const points = heatData.map(point => [point[0], point[1]]);
-      if (points.length > 0) {
-        const bounds = L.latLngBounds(points as [number, number][]);
-        map.fitBounds(bounds);
-      }
-    }
-
-    // Cleanup function
     return () => {
       if (mapInstanceRef.current) {
         mapInstanceRef.current.remove();
         mapInstanceRef.current = null;
       }
     };
-  }, [commune, transactions]);
+  }, [commune]);
 
-  return <div ref={mapRef} style={{ height: '530px' }} />;
+  /** 🔹 Ajout des communes limitrophes une fois récupérées */
+  useEffect(() => {
+    if (!mapInstanceRef.current || communesLimitrophes.length === 0) return;
+
+    console.log(
+      `🔵 Ajout de ${communesLimitrophes.length} communes limitrophes`
+    );
+
+    communesLimitrophes.forEach((communeLim) => {
+      addGeoJSONLayer(mapInstanceRef.current!, communeLim, "blue", 1, 0.2);
+    });
+  }, [communesLimitrophes]);
+
+  return <div ref={mapRef} style={{ height: "1000px", width: "100%" }} />;
+}
+
+/** 🔹 Ajoute un polygone GeoJSON sur la carte */
+/** 🔹 Ajoute un polygone GeoJSON sur la carte */
+function addGeoJSONLayer(
+  map: L.Map,
+  commune: CommuneGeoJSON,
+  color: string,
+  weight: number,
+  fillOpacity: number,
+  zoomToFit: boolean = false
+) {
+  try {
+    console.log(`🔵 Ajout de la commune ${commune.code_commune}`, commune);
+    if (!commune.geojson) {
+      console.warn(
+        "⚠️ `geojson` est undefined pour",
+        commune.code_commune,
+        commune
+      );
+      return;
+    }
+
+    const geoJSON = JSON.parse(commune.geojson);
+    if (!geoJSON || !geoJSON.coordinates) {
+      console.warn("⚠️ `geojson` mal formé pour", commune.code_commune);
+      return;
+    }
+
+    const layer = L.geoJSON(geoJSON, {
+      style: { color, weight, fillOpacity },
+    }).addTo(map);
+
+    if (zoomToFit) {
+      const bounds = layer.getBounds();
+      if (bounds.isValid()) {
+        map.fitBounds(bounds, { padding: [50, 50] });
+      } else {
+        console.warn("⚠️ Bounds invalides pour", commune.code_commune);
+      }
+    }
+  } catch (error) {
+    console.error("❌ Erreur parsing GeoJSON :", error);
+  }
+}
+
+/** 🔹 Récupère les communes limitrophes via API */
+async function fetchLimitrophes(
+  code_commune: string
+): Promise<CommuneGeoJSON[]> {
+  const res = await fetch(
+    `/api/communes-limitrophes?code_commune=${code_commune}`
+  );
+  if (!res.ok) throw new Error("Échec récupération communes limitrophes");
+  const data = await res.json();
+  return data.communesLimitrophes || [];
+}
+
+/** 🔹 Récupère le centre approximatif d'une commune */
+function getCommuneCenter(commune: CommuneGeoJSON): [number, number] {
+  try {
+    if (!commune.geojson) {
+      console.warn("⚠️ `geojson` est undefined pour", commune.code_commune);
+      return [43.7, 7.2]; // Valeur par défaut si erreur
+    }
+
+    const geoJSON = JSON.parse(commune.geojson);
+    if (!geoJSON || !geoJSON.coordinates) {
+      console.warn("⚠️ `geojson` mal formé pour", commune.code_commune);
+      return [43.7, 7.2];
+    }
+
+    const coordinates = geoJSON.coordinates[0];
+    const [lonSum, latSum] = coordinates.reduce(
+      ([lon, lat], [currLon, currLat]) => [lon + currLon, lat + currLat],
+      [0, 0]
+    );
+
+    return [latSum / coordinates.length, lonSum / coordinates.length];
+  } catch (error) {
+    console.error("❌ Erreur récupération centre GeoJSON :", error);
+    return [43.7, 7.2]; // Valeur par défaut si erreur
+  }
 }
