@@ -16,10 +16,9 @@ export async function PriceBar({
   const prixGlobal = await getPrixM2CommuneGlobal(codeCommune);
 
   if (
-    !prixGlobal ||
-    !prixGlobal.prix_m2_median ||
-    !prixGlobal.prix_m2_bas ||
-    !prixGlobal.prix_m2_haut
+    !prixGlobal?.prix_m2_median ||
+    !prixGlobal?.prix_m2_bas ||
+    !prixGlobal?.prix_m2_haut
   ) {
     console.error(`Prix médian non trouvé pour la commune ${codeCommune}`);
     return null;
@@ -58,11 +57,11 @@ export async function PriceBar({
 
       <div className="flex justify-between text-sm mt-2 text-gray-600">
         <span>
-          Prix bas
+          Prix bas {` `}
           {formatPrice(prixGlobal.prix_m2_bas)} €
         </span>
         <span>
-          Prix haut
+          Prix haut {` `}
           {formatPrice(prixGlobal.prix_m2_haut)} €
         </span>
       </div>

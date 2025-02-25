@@ -12,7 +12,7 @@ export async function SectionMapEntete({ codeCommune }: Readonly<Props>) {
   const commune = await getCommuneByCode(codeCommune);
   const transactions = await getTransactionsByCodeCommune(codeCommune);
   const geometrie = await prisma.$queryRaw`
-  SELECT ST_AsGeoJSON(geometrie) as geojson FROM "Commune" WHERE code_commune = ${commune.code_commune};
+  SELECT ST_AsGeoJSON(geometrie) as geojson FROM "Commune" WHERE code_commune = ${commune?.code_commune};
 `;
 
   return (
