@@ -1,8 +1,14 @@
+import type { Commune } from "@prisma/client";
 import type { NextRequest } from "next/server";
 import { PrismaClient } from "@prisma/client";
 import { NextResponse } from "next/server";
 
 const prisma = new PrismaClient();
+
+export type CommunesLimitrophes = {
+  code_commune: string;
+  geojson: string;
+}[];
 
 /** 📌 Fonction pour récupérer les communes limitrophes */
 export async function GET(req: NextRequest) {
@@ -18,14 +24,14 @@ export async function GET(req: NextRequest) {
 
   try {
     // ✅ Récupère la commune cible
-    const commune = await prisma.$queryRaw`
+    const commune: Commune[] = await prisma.$queryRaw`
       SELECT code_commune, ST_AsGeoJSON(geometrie) as geojson 
       FROM "Commune" 
       WHERE code_commune = ${code_commune};
     `;
 
     // ✅ Récupère les communes limitrophes (touchant la commune cible)
-    const communesLimitrophes = await prisma.$queryRaw`
+    const communesLimitrophes: CommunesLimitrophes = await prisma.$queryRaw`
       SELECT code_commune, ST_AsGeoJSON(geometrie) as geojson
       FROM "Commune" 
       WHERE ST_Touches((SELECT geometrie FROM "Commune" WHERE code_commune = ${code_commune}), geometrie);

@@ -1,14 +1,11 @@
+import type { Prisma, Transaction } from "@prisma/client";
 import { prisma } from "@/app/(frontend)/libs/prisma";
 
-export async function getTransactionsByCodeCommune(codeCommune: string) {
+export async function getTransactionsByCodeCommune(
+  codeCommune: string,
+  where: Omit<Prisma.TransactionWhereInput, "code_commune"> = {}
+): Promise<Transaction[]> {
   return await prisma.transaction.findMany({
-    where: { code_commune: codeCommune },
-    select: {
-      latitude: true,
-      longitude: true,
-      valeur_fonciere: true,
-      surface_reelle_bati: true,
-      nombre_pieces_principales: true,
-    },
+    where: { code_commune: codeCommune, ...where },
   });
 }
