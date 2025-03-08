@@ -1,8 +1,8 @@
 "use client";
 
 import type { GeoJSONGeometry } from "@/app/(frontend)/(features)/prix-immobilier/interfaces/geojson";
+import type { CommunesLimitrophes } from "@/app/(frontend)/(features)/prix-immobilier/ville/types/CommunesLimnitrophes";
 import type { FormattedStats } from "@/app/(frontend)/(features)/prix-immobilier/ville/types/FormatedStats";
-import type { CommunesLimitrophes } from "@/app/api/communes-limitrophes/route";
 import type { Commune, Transaction } from "@prisma/client";
 import { TransactionSchema } from "@/app/(frontend)/(features)/prix-immobilier/schemas/transaction";
 import { getCommunesLimitrophes } from "@/app/(frontend)/(features)/prix-immobilier/ville/services/getCommunesLimitrophes";
@@ -115,7 +115,7 @@ export default function MapPrix({
         mapInstanceRef.current = null;
       }
     };
-  }, [commune]);
+  }, [commune, geometrie]);
 
   /** 🔹 Ajout des communes limitrophes une fois récupérées */
   useEffect(() => {
@@ -126,7 +126,16 @@ export default function MapPrix({
     );
 
     communesLimitrophes.forEach((communeLim) => {
-      addGeoJSONLayer(mapInstanceRef.current!, communeLim, "blue", 1, 0.1);
+      addGeoJSONLayer(
+        mapInstanceRef.current!,
+        {
+          geojson: communeLim.geometrie,
+          code_commune: communeLim.codeCommune,
+        },
+        "blue",
+        1,
+        0.1
+      );
     });
   }, [communesLimitrophes]);
 

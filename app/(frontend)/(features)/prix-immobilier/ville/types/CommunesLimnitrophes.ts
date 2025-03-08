@@ -1,4 +1,6 @@
+import type { GeoJSONGeometry } from "@/app/(frontend)/(features)/prix-immobilier/interfaces/geojson";
+
 export type CommunesLimitrophes = {
-  code_commune: string;
-  geojson: string;
-}[];
+  codeCommune: string;
+  geometrie: GeoJSONGeometry;
+};

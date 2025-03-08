@@ -1,4 +1,3 @@
-import type { CommunesLimitrophes } from "@/app/(frontend)/(features)/prix-immobilier/ville/types/CommunesLimnitrophes";
 import type { NextRequest } from "next/server";
 import { PrismaClient } from "@prisma/client";
 import { NextResponse } from "next/server";
@@ -19,7 +18,10 @@ export async function GET(req: NextRequest) {
 
   try {
     // ✅ Récupère les communes limitrophes (touchant la commune cible)
-    const communesLimitrophes = await prisma.$queryRaw<CommunesLimitrophes>`
+    const communesLimitrophes: {
+      code_commune: string;
+      geojson: string;
+    } = await prisma.$queryRaw`
       SELECT code_commune, ST_AsGeoJSON(geometrie) as geojson
       FROM "Commune" 
       WHERE ST_Touches((SELECT geometrie FROM "Commune" WHERE code_commune = ${code_commune}), geometrie);

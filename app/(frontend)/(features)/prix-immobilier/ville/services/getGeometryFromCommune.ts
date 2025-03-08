@@ -7,7 +7,7 @@ export async function getGeometryFromCommune(codeCommune: string) {
         SELECT ST_AsGeoJSON(geometrie) as geojson FROM "Commune" WHERE code_commune = ${codeCommune};
     `;
     const validGeometry = validateGeoJSONGeometry(geometrie?.geojson);
-    if (!validGeometry) return null;
+    return validGeometry;
   } catch (error) {
     console.error("❌ Erreur lors de la récupération de la commune:", error);
     return null;
