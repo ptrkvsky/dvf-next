@@ -1,14 +1,10 @@
+import type { CommunesLimitrophes } from "@/app/(frontend)/(features)/prix-immobilier/ville/types/CommunesLimnitrophes";
 import type { Commune } from "@prisma/client";
 import type { NextRequest } from "next/server";
 import { PrismaClient } from "@prisma/client";
 import { NextResponse } from "next/server";
 
 const prisma = new PrismaClient();
-
-export type CommunesLimitrophes = {
-  code_commune: string;
-  geojson: string;
-}[];
 
 /** 📌 Fonction pour récupérer les communes limitrophes */
 export async function GET(req: NextRequest) {

@@ -1,5 +1,6 @@
 "use client";
 
+import type { GeoJSONGeometry } from "@/app/(frontend)/(features)/prix-immobilier/interfaces/geojson";
 import type { Commune } from "@prisma/client";
 import dynamic from "next/dynamic";
 
@@ -9,7 +10,7 @@ const MapPrix = dynamic(() => import("../map/MapPrix"), {
 
 type Props = {
   commune: Commune;
-  geometrie: any;
+  geometrie: GeoJSONGeometry | null;
 };
 
 export default function MapWrapper({ commune, geometrie }: Readonly<Props>) {
