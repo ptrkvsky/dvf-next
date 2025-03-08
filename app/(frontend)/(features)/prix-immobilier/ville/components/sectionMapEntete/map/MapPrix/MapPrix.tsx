@@ -5,10 +5,11 @@ import type { CommunesLimitrophes } from "@/app/(frontend)/(features)/prix-immob
 import type { FormattedStats } from "@/app/(frontend)/(features)/prix-immobilier/ville/types/FormatedStats";
 import type { Commune, Transaction } from "@prisma/client";
 import { TransactionSchema } from "@/app/(frontend)/(features)/prix-immobilier/schemas/transaction";
+import { useTransactions } from "@/app/(frontend)/(features)/prix-immobilier/ville/components/sectionMapEntete/map/MapPrix/hooks/useTransactions";
 import { getCommunesLimitrophes } from "@/app/(frontend)/(features)/prix-immobilier/ville/services/getCommunesLimitrophes";
 import { FormattedStatsSchema } from "@/app/(frontend)/(features)/prix-immobilier/ville/types/FormatedStats";
 import L from "leaflet";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { z } from "zod";
 import "leaflet.heat"; // Nécessite d'installer le package: npm install leaflet.heat
 import "leaflet.markercluster"; // Nécessite d'installer: npm install leaflet.markercluster
@@ -37,11 +38,15 @@ export default function MapPrix({
   const [communesLimitrophes, setCommunesLimitrophes] = useState<
     CommunesLimitrophes[]
   >([]);
-  const [transactions, setTransactions] = useState<Transaction[]>([]);
+  const { data: transactionsWithStats } = useTransactions(commune.code_commune);
+  const transactions = useMemo(
+    () => transactionsWithStats?.transactions ?? [],
+    [transactionsWithStats?.transactions]
+  );
+  const statsGlobales = transactionsWithStats?.stats ?? null;
   const [typeFiltre, setTypeFiltre] = useState<
     "tous" | "maison" | "appartement"
   >("tous");
-  const [statsGlobales, setStatsGlobales] = useState<any>(null);
   const [displayMode, setDisplayMode] = useState<"heatmap" | "clusters">(
     "heatmap"
   );
@@ -91,24 +96,6 @@ export default function MapPrix({
         console.error("❌ Erreur chargement communes limitrophes :", err)
       );
 
-    // ✅ Récupération des transactions
-    fetchTransactions(commune.code_commune)
-      .then((result) => {
-        setTransactions(result.transactions);
-        setStatsGlobales(result.stats);
-
-        // Définir les seuils de prix en fonction des données
-        if (result.stats?.prix_min_m2 && result.stats?.prix_max_m2) {
-          setPriceThreshold([
-            Math.floor(result.stats.prix_min_m2 / 1000) * 1000,
-            Math.ceil(result.stats.prix_max_m2 / 1000) * 1000,
-          ]);
-        }
-      })
-      .catch((err) =>
-        console.error("❌ Erreur chargement transactions :", err)
-      );
-
     return () => {
       if (mapInstanceRef.current) {
         mapInstanceRef.current.remove();
@@ -120,10 +107,6 @@ export default function MapPrix({
   /** 🔹 Ajout des communes limitrophes une fois récupérées */
   useEffect(() => {
     if (!mapInstanceRef.current || communesLimitrophes.length === 0) return;
-
-    console.warn(
-      `🔵 Ajout de ${communesLimitrophes.length} communes limitrophes`
-    );
 
     communesLimitrophes.forEach((communeLim) => {
       addGeoJSONLayer(
@@ -470,9 +453,7 @@ export default function MapPrix({
                 Nombre de transactions
               </div>
               <div className="text-xl font-bold">
-                {Number.parseInt(
-                  statsGlobales.nombre_transactions
-                ).toLocaleString("fr-FR")}
+                {statsGlobales.nombre_transactions.toLocaleString("fr-FR")}
               </div>
             </div>
           </div>

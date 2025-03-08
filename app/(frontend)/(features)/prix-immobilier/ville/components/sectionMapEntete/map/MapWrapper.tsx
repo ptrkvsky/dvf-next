@@ -4,7 +4,7 @@ import type { GeoJSONGeometry } from "@/app/(frontend)/(features)/prix-immobilie
 import type { Commune } from "@prisma/client";
 import dynamic from "next/dynamic";
 
-const MapPrix = dynamic(() => import("../map/MapPrix"), {
+const MapPrix = dynamic(() => import("./MapPrix/MapPrix"), {
   ssr: false,
 });
 

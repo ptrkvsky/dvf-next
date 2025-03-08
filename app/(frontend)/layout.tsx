@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { Providers } from "@/app/(frontend)/providers";
 import { Inter, Merriweather } from "next/font/google";
 import "@/app/(frontend)/globals.css";
 
@@ -29,7 +30,7 @@ export default function RootLayout({
       <body
         className={`${inter.variable} ${merriweather.variable} antialiased text-body`}
       >
-        {children}
+        <Providers>{children}</Providers>
       </body>
     </html>
   );
