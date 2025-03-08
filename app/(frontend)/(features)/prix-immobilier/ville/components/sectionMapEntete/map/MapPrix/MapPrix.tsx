@@ -1,28 +1,20 @@
 "use client";
 
 import type { GeoJSONGeometry } from "@/app/(frontend)/(features)/prix-immobilier/interfaces/geojson";
-import type { CommunesLimitrophes } from "@/app/(frontend)/(features)/prix-immobilier/ville/types/CommunesLimnitrophes";
-import type { FormattedStats } from "@/app/(frontend)/(features)/prix-immobilier/ville/types/FormatedStats";
-import type { Commune, Transaction } from "@prisma/client";
-import { TransactionSchema } from "@/app/(frontend)/(features)/prix-immobilier/schemas/transaction";
+import type { Commune } from "@prisma/client";
+import useCommunesLimitrophes from "@/app/(frontend)/(features)/prix-immobilier/ville/components/sectionMapEntete/map/MapPrix/hooks/useCommunesLimitrophes";
+import { useLimitrophesLayers } from "@/app/(frontend)/(features)/prix-immobilier/ville/components/sectionMapEntete/map/MapPrix/hooks/useLimitropesLayers";
+import { useMapLayers } from "@/app/(frontend)/(features)/prix-immobilier/ville/components/sectionMapEntete/map/MapPrix/hooks/useMapLayers";
 import { useTransactions } from "@/app/(frontend)/(features)/prix-immobilier/ville/components/sectionMapEntete/map/MapPrix/hooks/useTransactions";
-import { getCommunesLimitrophes } from "@/app/(frontend)/(features)/prix-immobilier/ville/services/getCommunesLimitrophes";
-import { FormattedStatsSchema } from "@/app/(frontend)/(features)/prix-immobilier/ville/types/FormatedStats";
+import { createGeoJSONLayer } from "@/app/(frontend)/(features)/prix-immobilier/ville/components/sectionMapEntete/map/MapPrix/utils/createGeoJSONLayer";
 import L from "leaflet";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { z } from "zod";
 import "leaflet.heat"; // Nécessite d'installer le package: npm install leaflet.heat
 import "leaflet.markercluster"; // Nécessite d'installer: npm install leaflet.markercluster
 import "leaflet/dist/leaflet.css";
 import "leaflet.markercluster/dist/MarkerCluster.css";
 import "leaflet.markercluster/dist/MarkerCluster.Default.css";
 import "./MapPrix.style.css";
-
-type CustomLayer = {
-  _heat?: boolean;
-  _markerCluster?: boolean;
-  options?: L.LayerOptions & { className?: string };
-} & L.Layer;
 
 type MapPrixProps = {
   commune: Commune;
@@ -34,16 +26,7 @@ export default function MapPrix({
   geometrie,
 }: Readonly<MapPrixProps>) {
   const mapRef = useRef<HTMLDivElement>(null);
-  const mapInstanceRef = useRef<L.Map | null>(null); // L.Map instance
-  const [communesLimitrophes, setCommunesLimitrophes] = useState<
-    CommunesLimitrophes[]
-  >([]);
-  const { data: transactionsWithStats } = useTransactions(commune.code_commune);
-  const transactions = useMemo(
-    () => transactionsWithStats?.transactions ?? [],
-    [transactionsWithStats?.transactions]
-  );
-  const statsGlobales = transactionsWithStats?.stats ?? null;
+  const mapInstanceRef = useRef<L.Map | null>(null);
   const [typeFiltre, setTypeFiltre] = useState<
     "tous" | "maison" | "appartement"
   >("tous");
@@ -53,6 +36,16 @@ export default function MapPrix({
   const [priceThreshold, setPriceThreshold] = useState<[number, number]>([
     0, 15000,
   ]);
+  const { data: communesLimitrophes } = useCommunesLimitrophes(
+    commune.code_commune
+  );
+
+  const { data: transactionsWithStats } = useTransactions(commune.code_commune);
+  const transactions = useMemo(
+    () => transactionsWithStats?.transactions ?? [],
+    [transactionsWithStats?.transactions]
+  );
+  const statsGlobales = transactionsWithStats?.stats ?? null;
 
   /** 🗺️ Initialisation de la carte Leaflet */
   useEffect(() => {
@@ -79,22 +72,14 @@ export default function MapPrix({
       }
     ).addTo(map);
 
-    // ✅ Ajout du polygone de la commune principale
-    addGeoJSONLayer(
-      map,
+    const layer = createGeoJSONLayer(
       { geojson: geometrie, code_commune: commune.code_commune },
       "red",
       2,
-      0.2,
-      true
+      0.2
     );
-
-    // ✅ Récupération des communes limitrophes
-    getCommunesLimitrophes(commune.code_commune)
-      .then(setCommunesLimitrophes)
-      .catch((err) =>
-        console.error("❌ Erreur chargement communes limitrophes :", err)
-      );
+    // ✅ Ajout du polygone de la commune principale
+    layer?.addTo(map);
 
     return () => {
       if (mapInstanceRef.current) {
@@ -105,157 +90,155 @@ export default function MapPrix({
   }, [commune, geometrie]);
 
   /** 🔹 Ajout des communes limitrophes une fois récupérées */
-  useEffect(() => {
-    if (!mapInstanceRef.current || communesLimitrophes.length === 0) return;
-
-    communesLimitrophes.forEach((communeLim) => {
-      addGeoJSONLayer(
-        mapInstanceRef.current!,
-        {
-          geojson: communeLim.geometrie,
-          code_commune: communeLim.codeCommune,
-        },
-        "blue",
-        1,
-        0.1
-      );
-    });
-  }, [communesLimitrophes]);
+  useLimitrophesLayers({
+    mapInstanceRef,
+    communesLimitrophes,
+    map: mapInstanceRef.current,
+  });
 
   /** 🔹 Affichage des transactions selon le mode choisi */
-  useEffect(() => {
-    if (!mapInstanceRef.current || transactions.length === 0) return;
-    // Supprimer les couches existantes
-    mapInstanceRef.current.eachLayer((layer: CustomLayer) => {
-      if (
-        layer._heat ||
-        layer._markerCluster ||
-        layer.options?.className === "price-marker"
-      ) {
-        mapInstanceRef.current!.removeLayer(layer as L.Layer); // Obligatoire vue qu'on utilise des plugins
-      }
-    });
+  useMapLayers({
+    mapInstanceRef,
+    communesLimitrophes,
+    map: mapInstanceRef.current,
+    transactions,
+    displayMode,
+    typeFiltre,
+    priceThreshold,
+  });
+  // useEffect(() => {
+  //   if (!mapInstanceRef.current || transactions.length === 0) return;
+  //   // Supprimer les couches existantes
+  //   mapInstanceRef.current.eachLayer((layer: CustomLayer) => {
+  //     if (
+  //       layer._heat
+  //       || layer._markerCluster
+  //       || layer.options?.className === 'price-marker'
+  //     ) {
+  //       mapInstanceRef.current!.removeLayer(layer as L.Layer); // Obligatoire vue qu'on utilise des plugins
+  //     }
+  //   });
 
-    // Filtrer les transactions selon le type sélectionné
-    const transactionsFiltrees =
-      typeFiltre === "tous"
-        ? transactions
-        : transactions.filter(
-            (t) => t.type_local && t.type_local.toLowerCase() === typeFiltre
-          );
+  //   // Filtrer les transactions selon le type sélectionné
+  //   const transactionsFiltrees
+  //     = typeFiltre === 'tous'
+  //       ? transactions
+  //       : transactions.filter(
+  //           t => t.type_local && t.type_local.toLowerCase() === typeFiltre,
+  //         );
 
-    if (displayMode === "heatmap") {
-      console.warn(
-        `🔥 Création de la heatmap avec ${transactionsFiltrees.length} transactions`
-      );
+  //   if (displayMode === 'heatmap') {
+  //     console.warn(
+  //       `🔥 Création de la heatmap avec ${transactionsFiltrees.length} transactions`,
+  //     );
 
-      // Préparer les données pour la heatmap
-      const heatData = transactionsFiltrees.map((t) => {
-        // Calcul du prix au m²
-        const prixM2 = t.surface_reelle_bati
-          ? t.valeur_fonciere / t.surface_reelle_bati
-          : 0;
+  //     // Préparer les données pour la heatmap
+  //     const heatData = transactionsFiltrees.map((t) => {
+  //       // Calcul du prix au m²
+  //       const prixM2 = t.surface_reelle_bati
+  //         ? t.valeur_fonciere / t.surface_reelle_bati
+  //         : 0;
 
-        // L'intensité est basée sur le prix au m²
-        const intensity = Math.min(prixM2 / 10000, 1);
+  //       // L'intensité est basée sur le prix au m²
+  //       const intensity = Math.min(prixM2 / 10000, 1);
 
-        return [t.latitude, t.longitude, intensity];
-      });
+  //       return [t.latitude, t.longitude, intensity];
+  //     });
 
-      // @ts-expect-error Leaflet heatmap plugin types not available
-      L.heatLayer(heatData, {
-        radius: 25,
-        blur: 15,
-        maxZoom: 17,
-        gradient: {
-          0.0: "green",
-          0.3: "lime",
-          0.5: "yellow",
-          0.7: "orange",
-          1.0: "red",
-        },
-      }).addTo(mapInstanceRef.current);
-    } else {
-      console.warn(
-        `🔵 Création des clusters avec ${transactionsFiltrees.length} transactions`
-      );
+  //     // @ts-expect-error Leaflet heatmap plugin types not available
+  //     L.heatLayer(heatData, {
+  //       radius: 25,
+  //       blur: 15,
+  //       maxZoom: 17,
+  //       gradient: {
+  //         0.0: 'green',
+  //         0.3: 'lime',
+  //         0.5: 'yellow',
+  //         0.7: 'orange',
+  //         1.0: 'red',
+  //       },
+  //     }).addTo(mapInstanceRef.current);
+  //   } else {
+  //     console.warn(
+  //       `🔵 Création des clusters avec ${transactionsFiltrees.length} transactions`,
+  //     );
 
-      // Créer des clusters pour regrouper les marqueurs
-      // @ts-expect-error - Type des plugins Leaflet
-      const markers = L.markerClusterGroup({
-        maxClusterRadius: 50, // Rayon plus petit pour créer plus de clusters
-        disableClusteringAtZoom: 17, // Désactive le clustering au niveau de zoom élevé
-        spiderfyOnMaxZoom: false, // Désactive l'effet d'araignée
-        showCoverageOnHover: false, // Ne pas montrer les limites du cluster au survol
-        zoomToBoundsOnClick: true, // Zoom sur les limites du cluster au clic
-        iconCreateFunction(cluster: { getAllChildMarkers: () => any }) {
-          // Calculer le prix moyen des transactions dans le cluster
-          const markers = cluster.getAllChildMarkers();
-          const prixM2Liste = markers
-            .map(
-              (marker: { options: { prixM2: any } }) => marker.options.prixM2
-            )
-            .filter((p: number) => p > 0);
+  //     // Créer des clusters pour regrouper les marqueurs
+  //     // @ts-expect-error - Type des plugins Leaflet
+  //     const markers = L.markerClusterGroup({
+  //       maxClusterRadius: 50, // Rayon plus petit pour créer plus de clusters
+  //       disableClusteringAtZoom: 17, // Désactive le clustering au niveau de zoom élevé
+  //       spiderfyOnMaxZoom: false, // Désactive l'effet d'araignée
+  //       showCoverageOnHover: false, // Ne pas montrer les limites du cluster au survol
+  //       zoomToBoundsOnClick: true, // Zoom sur les limites du cluster au clic
+  //       iconCreateFunction(cluster: { getAllChildMarkers: () => any }) {
+  //         // Calculer le prix moyen des transactions dans le cluster
+  //         const markers = cluster.getAllChildMarkers();
+  //         const prixM2Liste = markers
+  //           .map(
+  //             (marker: { options: { prixM2: any } }) => marker.options.prixM2,
+  //           )
+  //           .filter((p: number) => p > 0);
 
-          if (prixM2Liste.length === 0) return L.divIcon();
+  //         if (prixM2Liste.length === 0) return L.divIcon();
 
-          const prixMoyenM2 =
-            prixM2Liste.reduce((sum: any, price: any) => sum + price, 0) /
-            prixM2Liste.length;
-          const couleur = getColorForPrice(prixMoyenM2);
+  //         const prixMoyenM2
+  //           = prixM2Liste.reduce((sum: any, price: any) => sum + price, 0)
+  //             / prixM2Liste.length;
+  //         const couleur = getColorForPrice(prixMoyenM2);
 
-          return L.divIcon({
-            html: `<div style="background-color: ${couleur}; width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; color: white; font-weight: bold; border-radius: 50%;">${Math.round(prixMoyenM2 / 1000)}k</div>`,
-            className: "price-cluster",
-            iconSize: [40, 40],
-          });
-        },
-      });
+  //         return L.divIcon({
+  //           html: `<div style="background-color: ${couleur}; width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; color: white; font-weight: bold; border-radius: 50%;">${Math.round(prixMoyenM2 / 1000)}k</div>`,
+  //           className: 'price-cluster',
+  //           iconSize: [40, 40],
+  //         });
+  //       },
+  //     });
 
-      // Créer des marqueurs pour chaque transaction
-      transactionsFiltrees.forEach((t) => {
-        const prixM2 = t.surface_reelle_bati
-          ? t.valeur_fonciere / t.surface_reelle_bati
-          : 0;
+  //     // Créer des marqueurs pour chaque transaction
+  //     transactionsFiltrees.forEach((t) => {
+  //       const prixM2 = t.surface_reelle_bati
+  //         ? t.valeur_fonciere / t.surface_reelle_bati
+  //         : 0;
 
-        if (prixM2 < priceThreshold[0] || prixM2 > priceThreshold[1]) {
-          return; // Ignorer les prix en dehors des seuils définis
-        }
+  //       if (prixM2 < priceThreshold[0] || prixM2 > priceThreshold[1]) {
+  //         return; // Ignorer les prix en dehors des seuils définis
+  //       }
 
-        const couleur = getColorForPrice(prixM2);
+  //       const couleur = getColorForPrice(prixM2);
 
-        const icon = L.divIcon({
-          className: "price-marker",
-          iconSize: [30, 30],
-          html: `<div style="background-color: ${couleur}; width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; color: white; font-weight: bold; border-radius: 50%; font-size: 12px;">${Math.round(prixM2 / 1000)}k</div>`,
-        });
+  //       const icon = L.divIcon({
+  //         className: 'price-marker',
+  //         iconSize: [30, 30],
+  //         html: `<div style="background-color: ${couleur}; width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; color: white; font-weight: bold; border-radius: 50%; font-size: 12px;">${Math.round(prixM2 / 1000)}k</div>`,
+  //       });
 
-        const popupContent = `
-          <div style="min-width: 200px;">
-            <h3 style="margin: 0; padding-bottom: 8px; border-bottom: 1px solid #ddd; text-align: center;">
-              Prix: ${Math.round(prixM2).toLocaleString("fr-FR")} €/m²
-            </h3>
-            <p style="margin: 8px 0;">${t.type_local} - ${Math.round(t.surface_reelle_bati ?? 0)} m²</p>
-            <p style="margin: 8px 0; font-weight: bold;">Montant total: ${Math.round(t.valeur_fonciere).toLocaleString("fr-FR")} €</p>
-          </div>
-        `;
+  //       const popupContent = `
+  //         <div style="min-width: 200px;">
+  //           <h3 style="margin: 0; padding-bottom: 8px; border-bottom: 1px solid #ddd; text-align: center;">
+  //             Prix: ${Math.round(prixM2).toLocaleString('fr-FR')} €/m²
+  //           </h3>
+  //           <p style="margin: 8px 0;">${t.type_local} - ${Math.round(t.surface_reelle_bati ?? 0)} m²</p>
+  //           <p style="margin: 8px 0; font-weight: bold;">Montant total: ${Math.round(t.valeur_fonciere).toLocaleString('fr-FR')} €</p>
+  //         </div>
+  //       `;
 
-        const markerOptions = {
-          icon,
-          prixM2, // Store price in a custom properties object
-        } as L.MarkerOptions;
+  //       const markerOptions = {
+  //         icon,
+  //         prixM2, // Store price in a custom properties object
+  //       } as L.MarkerOptions;
 
-        const marker = L.marker(
-          [t.latitude ?? 0, t.longitude ?? 0],
-          markerOptions
-        ).bindPopup(popupContent);
+  //       const marker = L.marker(
+  //         [t.latitude ?? 0, t.longitude ?? 0],
+  //         markerOptions,
+  //       ).bindPopup(popupContent);
 
-        markers.addLayer(marker);
-      });
+  //       markers.addLayer(marker);
+  //     });
 
-      mapInstanceRef.current.addLayer(markers);
-    }
-  }, [transactions, displayMode, typeFiltre, priceThreshold]);
+  //     mapInstanceRef.current.addLayer(markers);
+  //   }
+  // }, [transactions, displayMode, typeFiltre, priceThreshold]);
 
   return (
     <div>
@@ -506,29 +489,6 @@ function addGeoJSONLayer(
   }
 }
 
-/** 🔹 Récupère les transactions immobilières */
-async function fetchTransactions(code_commune: string): Promise<{
-  transactions: Transaction[];
-  stats: FormattedStats;
-}> {
-  const res = await fetch(
-    `/api/transactions?code_commune=${code_commune}&limit=1000`
-  );
-  if (!res.ok) throw new Error("Échec récupération transactions");
-  const data = await res.json();
-  const TransactionsResponseSchema = z.object({
-    transactions: z.array(TransactionSchema).transform((transactions) =>
-      transactions.map((t) => ({
-        ...t,
-        date_mutation: new Date(t.date_mutation),
-      }))
-    ),
-    stats: FormattedStatsSchema,
-  });
-
-  return TransactionsResponseSchema.parse(data);
-}
-
 /** 🔹 Récupère le centre approximatif d'une commune */
 function getCommuneCenter(
   commune: Commune,
@@ -573,17 +533,17 @@ function getCommuneCenter(
   }
 }
 
-/** 🔹 Obtient une couleur en fonction du prix */
-function getColorForPrice(price: number): string {
-  if (!price) return "#CCCCCC"; // Gris pour les zones sans données
+// /** 🔹 Obtient une couleur en fonction du prix */
+// function getColorForPrice(price: number): string {
+//   if (!price) return "#CCCCCC"; // Gris pour les zones sans données
 
-  if (price >= 8000) return "#FF4500"; // Rouge-orange pour les zones très chères
-  if (price >= 7000) return "#FF8C00"; // Orange foncé
-  if (price >= 6000) return "#FFA500"; // Orange
-  if (price >= 5000) return "#FFD700"; // Or
-  if (price >= 4000) return "#32CD32"; // Vert lime
-  return "#008000"; // Vert foncé pour les zones moins chères
-}
+//   if (price >= 8000) return "#FF4500"; // Rouge-orange pour les zones très chères
+//   if (price >= 7000) return "#FF8C00"; // Orange foncé
+//   if (price >= 6000) return "#FFA500"; // Orange
+//   if (price >= 5000) return "#FFD700"; // Or
+//   if (price >= 4000) return "#32CD32"; // Vert lime
+//   return "#008000"; // Vert foncé pour les zones moins chères
+// }
 
 /** 🔹 Ajoute une feuille de style pour les marqueurs personnalisés */
 function addCustomStyles() {
