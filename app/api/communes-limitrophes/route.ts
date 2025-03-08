@@ -1,5 +1,4 @@
 import type { CommunesLimitrophes } from "@/app/(frontend)/(features)/prix-immobilier/ville/types/CommunesLimnitrophes";
-import type { Commune } from "@prisma/client";
 import type { NextRequest } from "next/server";
 import { PrismaClient } from "@prisma/client";
 import { NextResponse } from "next/server";
@@ -19,28 +18,23 @@ export async function GET(req: NextRequest) {
   }
 
   try {
-    // ✅ Récupère la commune cible
-    const commune: Commune[] = await prisma.$queryRaw`
-      SELECT code_commune, ST_AsGeoJSON(geometrie) as geojson 
-      FROM "Commune" 
-      WHERE code_commune = ${code_commune};
-    `;
-
     // ✅ Récupère les communes limitrophes (touchant la commune cible)
-    const communesLimitrophes: CommunesLimitrophes = await prisma.$queryRaw`
+    const communesLimitrophes = await prisma.$queryRaw<CommunesLimitrophes>`
       SELECT code_commune, ST_AsGeoJSON(geometrie) as geojson
       FROM "Commune" 
       WHERE ST_Touches((SELECT geometrie FROM "Commune" WHERE code_commune = ${code_commune}), geometrie);
     `;
 
     return NextResponse.json({
-      commune: commune[0] || null,
       communesLimitrophes,
     });
-  } catch (error) {
+  } catch (error: unknown) {
     console.error("❌ Erreur API :", error);
     return NextResponse.json(
-      { message: "Erreur serveur", error: error.message },
+      {
+        message: "Erreur serveur",
+        error: error instanceof Error ? error.message : String(error),
+      },
       { status: 500 }
     );
   }
