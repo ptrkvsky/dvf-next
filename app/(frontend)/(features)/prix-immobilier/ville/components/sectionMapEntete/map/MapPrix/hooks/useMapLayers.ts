@@ -57,7 +57,11 @@ export function useMapLayers({
       console.warn(
         `🔥 Création de la heatmap avec ${transactionsFiltrees.length} transactions`
       );
-      const heatLayer = createHeatmapLayer(transactionsFiltrees);
+      if (!mapInstanceRef.current) return;
+      const heatLayer = createHeatmapLayer(
+        mapInstanceRef.current,
+        transactionsFiltrees
+      );
       heatLayer.addTo(mapInstanceRef.current);
     } else {
       console.warn(

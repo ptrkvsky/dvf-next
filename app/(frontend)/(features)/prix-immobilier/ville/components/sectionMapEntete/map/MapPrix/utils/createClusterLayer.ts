@@ -1,11 +1,15 @@
 import type { Transaction } from "@prisma/client";
 import { getColorForPrice } from "@/app/(frontend)/(features)/prix-immobilier/ville/components/sectionMapEntete/map/MapPrix/utils/getColorForPrice";
+import { getPriceRangeForZone } from "@/app/(frontend)/(features)/prix-immobilier/ville/components/sectionMapEntete/map/MapPrix/utils/getPriceRangeForZone";
 import L from "leaflet";
 
 export function createClusterLayer(
   transactions: Transaction[],
   priceThreshold: number[]
 ) {
+  const { maxPrice, minPrice } = getPriceRangeForZone(transactions);
+  console.warn(`📊 Plage des prix à  min=${minPrice}, max=${maxPrice}`);
+
   // @ts-expect-error - Type des plugins Leaflet
   const markers = L.markerClusterGroup({
     maxClusterRadius: 50,
@@ -24,7 +28,7 @@ export function createClusterLayer(
       const prixMoyenM2 =
         prixM2Liste.reduce((sum: any, price: any) => sum + price, 0) /
         prixM2Liste.length;
-      const couleur = getColorForPrice(prixMoyenM2);
+      const couleur = getColorForPrice(prixMoyenM2, minPrice, maxPrice);
 
       return L.divIcon({
         html: `<div style="background-color: ${couleur}; width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; color: white; font-weight: bold; border-radius: 50%;">${Math.round(prixMoyenM2 / 1000)}k</div>`,
@@ -43,7 +47,7 @@ export function createClusterLayer(
       return;
     }
 
-    const couleur = getColorForPrice(prixM2);
+    const couleur = getColorForPrice(prixM2, minPrice, maxPrice);
 
     const icon = L.divIcon({
       className: "price-marker",
