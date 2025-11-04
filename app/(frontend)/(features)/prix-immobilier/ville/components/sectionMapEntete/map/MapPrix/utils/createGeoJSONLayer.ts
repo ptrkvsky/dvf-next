@@ -8,7 +8,7 @@ export function createGeoJSONLayer(
   fillOpacity: number
 ): L.GeoJSON | null {
   if (!data?.geojson) {
-    console.warn("⚠️ Donnée GeoJSON manquante");
+    // GeoJSON manquant : normal si les données ne sont pas encore importées
     return null;
   }
 

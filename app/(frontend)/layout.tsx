@@ -28,7 +28,7 @@ export default function RootLayout({
   return (
     <html lang="fr">
       <body
-        className={`${inter.variable} ${merriweather.variable} antialiased text-body`}
+        className={`${inter.variable} ${merriweather.variable} text-body antialiased`}
       >
         <Providers>{children}</Providers>
       </body>

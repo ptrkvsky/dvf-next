@@ -8,10 +8,9 @@ export function getCommuneCenter(
 ): [number, number] {
   try {
     if (!geometrie) {
-      console.warn(
-        `⚠️ 'geometrie' est undefined pour la commune ${commune.code_commune}`
-      );
-      return [43.7, 7.2]; // Valeur par défaut en cas d'erreur
+      // Géométrie manquante : normal si les données GeoJSON ne sont pas encore importées
+      // Utilisation du centre par défaut (Alpes-Maritimes)
+      return [43.7, 7.2];
     }
 
     let coordinates: [number, number][] = [];
@@ -23,9 +22,7 @@ export function getCommuneCenter(
     }
 
     if (!Array.isArray(coordinates) || coordinates.length === 0) {
-      console.warn(
-        `⚠️ Coordonnées invalides pour la commune ${commune.code_commune}`
-      );
+      // Coordonnées invalides : utilisation du centre par défaut
       return [43.7, 7.2];
     }
 

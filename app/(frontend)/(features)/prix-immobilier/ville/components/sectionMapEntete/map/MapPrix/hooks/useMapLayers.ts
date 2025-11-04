@@ -11,14 +11,14 @@
  * @param {string} props.typeFiltre - Type de filtre à appliquer sur les transactions.
  * @param {number[]} props.priceThreshold - Intervalle de prix à afficher dans les clusters.
  */
-import type { CommunesLimitrophes } from "@/app/(frontend)/(features)/prix-immobilier/ville/types/CommunesLimnitrophes";
-import type { Transaction } from "@prisma/client";
-import type { RefObject } from "react";
-import { clearMapLayers } from "@/app/(frontend)/(features)/prix-immobilier/ville/components/sectionMapEntete/map/MapPrix/utils/clearMapLayers";
-import { createClusterLayer } from "@/app/(frontend)/(features)/prix-immobilier/ville/components/sectionMapEntete/map/MapPrix/utils/createClusterLayer";
-import { createHeatmapLayer } from "@/app/(frontend)/(features)/prix-immobilier/ville/components/sectionMapEntete/map/MapPrix/utils/createHeatMapLayer";
-import { filterTransactions } from "@/app/(frontend)/(features)/prix-immobilier/ville/components/sectionMapEntete/map/MapPrix/utils/filterTransactions";
-import { useEffect } from "react";
+import type { CommunesLimitrophes } from '@/app/(frontend)/(features)/prix-immobilier/ville/types/CommunesLimnitrophes';
+import type { Transaction } from '@prisma/client';
+import type { RefObject } from 'react';
+import { clearMapLayers } from '@/app/(frontend)/(features)/prix-immobilier/ville/components/sectionMapEntete/map/MapPrix/utils/clearMapLayers';
+import { createClusterLayer } from '@/app/(frontend)/(features)/prix-immobilier/ville/components/sectionMapEntete/map/MapPrix/utils/createClusterLayer';
+import { createHeatmapLayer } from '@/app/(frontend)/(features)/prix-immobilier/ville/components/sectionMapEntete/map/MapPrix/utils/createHeatMapLayer';
+import { filterTransactions } from '@/app/(frontend)/(features)/prix-immobilier/ville/components/sectionMapEntete/map/MapPrix/utils/filterTransactions';
+import { useEffect } from 'react';
 
 type Props = {
   mapInstanceRef: RefObject<L.Map | null>;
@@ -53,23 +53,19 @@ export function useMapLayers({
 
     const transactionsFiltrees = filterTransactions(transactions, typeFiltre);
 
-    if (displayMode === "heatmap") {
-      console.warn(
-        `🔥 Création de la heatmap avec ${transactionsFiltrees.length} transactions`
-      );
-      if (!mapInstanceRef.current) return;
+    if (displayMode === 'heatmap') {
+      if (!mapInstanceRef.current) {
+        return;
+      }
       const heatLayer = createHeatmapLayer(
         mapInstanceRef.current,
-        transactionsFiltrees
+        transactionsFiltrees,
       );
       heatLayer.addTo(mapInstanceRef.current);
     } else {
-      console.warn(
-        `🔵 Création des clusters avec ${transactionsFiltrees.length} transactions`
-      );
       const clusterLayer = createClusterLayer(
         transactionsFiltrees,
-        priceThreshold
+        priceThreshold,
       );
       mapInstanceRef.current.addLayer(clusterLayer);
     }

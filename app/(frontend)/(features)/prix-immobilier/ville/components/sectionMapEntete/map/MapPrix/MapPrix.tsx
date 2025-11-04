@@ -53,8 +53,6 @@ export default function MapPrix({
   useEffect(() => {
     if (!mapRef.current || mapInstanceRef.current) return;
 
-    console.warn("🗺️ Initialisation de la carte Leaflet...");
-
     // Ajouter les styles personnalisés
     addCustomStyles();
 

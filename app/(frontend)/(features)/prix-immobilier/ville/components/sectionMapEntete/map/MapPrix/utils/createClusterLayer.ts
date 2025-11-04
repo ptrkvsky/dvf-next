@@ -8,7 +8,6 @@ export function createClusterLayer(
   priceThreshold: number[]
 ) {
   const { maxPrice, minPrice } = getPriceRangeForZone(transactions);
-  console.warn(`📊 Plage des prix à  min=${minPrice}, max=${maxPrice}`);
 
   // @ts-expect-error - Type des plugins Leaflet
   const markers = L.markerClusterGroup({
